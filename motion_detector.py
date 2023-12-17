@@ -2,7 +2,8 @@ import cv2, time, pandas
 from datetime import datetime
 import requests
 import sys
-import subprocess
+import os
+import shutil
 
 first_frame = None
 status_list = [None,None]
@@ -18,6 +19,22 @@ video = cv2.VideoCapture(0)
 # fourcc = cv2.VideoWriter_fourcc(*'XVID')
 # out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
 
+#clear images
+current_directory = os.getcwd()
+
+folder_name = "images"
+
+folder_path = os.path.join(current_directory, folder_name)
+
+try:
+    shutil.rmtree(folder_path)
+    os.makedirs(folder_path)
+    print(f"Contents of {folder_path} cleared.")
+except Exception as e:
+    print(f"Error clearing {folder_path}: {e}")
+
+
+counter_value = 900
 counter =0 ; 
 while True:
     check, frame = video.read()
@@ -25,7 +42,7 @@ while True:
     gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray,(21,21),0)
 
-    if first_frame is None or counter == 100:
+    if first_frame is None or counter >= counter_value:
         print("assigning first_frame")
         first_frame=gray
         counter = 0;
@@ -51,19 +68,17 @@ while True:
             'message' : "There's been moviment in your room",
         }
         try:    
-            whatsapp_image = "image_"+str(counter)+".jpg";
-            # image_name = f"{whatsapp_image.splkit('.')[0]}{counter}.{whatsapp_image.split('.')[1]}"
-
-            # whatsapp_image = "D:\$$FanshaweServer\ENGLISH\WhatsApp Image 2023-12-07 at 11.02.41 AM(1).jpeg"
-            cv2.imwrite(whatsapp_image, frame)
-
-            files = {
-                'file': (whatsapp_image, open(whatsapp_image, 'rb')),
-            }
-            # out.write(frame)
-            # response = requests.post(api_url, data=data, files=files)
-            # response.raise_for_status()  # Raise an exception for HTTP errors
-            print("POST request successful")
+            if counter % 10 is 0 :
+                 whatsapp_image = "images/image_"+str(counter)+".jpg";
+                 cv2.imwrite(whatsapp_image, frame)
+                 files = {
+                     'file': (whatsapp_image, open(whatsapp_image, 'rb')),
+                     }
+                 counter = counter_value
+                 # response = requests.post(api_url, data=data, files=files)
+                 # response.raise_for_status()  # Raise an exception for HTTP errors
+                 print("POST request successful")
+           
         except requests.exceptions.RequestException as e:
             print("Request failed:", e)
         
