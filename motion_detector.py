@@ -2,32 +2,36 @@ import cv2, time, pandas
 from datetime import datetime
 import requests
 import sys
+import subprocess
 
 first_frame = None
 status_list = [None,None]
 times = []
 df=pandas.DataFrame(columns=["Start","End"])
 
-api_url = "http://10.0.0.54:3333/message/image?key=memorukey"
+api_url = "http://localhost:3333/message/image?key=memorukey"
 phone_number = "15196154641"    
 
-video = cv2.VideoCapture(1)
+video = cv2.VideoCapture(0)
 
 #video writer object
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
+# fourcc = cv2.VideoWriter_fourcc(*'XVID')
+# out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
 
-
+counter =0 ; 
 while True:
     check, frame = video.read()
     status = 0
     gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray,(21,21),0)
 
-    if first_frame is None:
+    if first_frame is None or counter == 100:
+        print("assigning first_frame")
         first_frame=gray
+        counter = 0;
         continue
-
+    else:
+        print("Not updating image because counter is ", counter)
     delta_frame=cv2.absdiff(first_frame,gray)
     thresh_frame=cv2.threshold(delta_frame, 30, 255, cv2.THRESH_BINARY)[1]
     thresh_frame=cv2.dilate(thresh_frame, None, iterations=2)
@@ -47,33 +51,27 @@ while True:
             'message' : "There's been moviment in your room",
         }
         try:    
-            print("printing image")
             whatsapp_image = 'image.jpg'
             # whatsapp_image = "D:\$$FanshaweServer\ENGLISH\WhatsApp Image 2023-12-07 at 11.02.41 AM(1).jpeg"
             cv2.imwrite(whatsapp_image, frame)
-            whatsapp_file = {'file': open(whatsapp_image, 'rb')}
-            out.write(frame)
-            curl_command = [
-                'curl',
-                '-X', 'POST',
-                '-F', f"id={phone_number}",
-                '-F', f"message=There's been movement in your room",
-                '-F', f"file=@{whatsapp_image}",
-                api_url
-                ]
-            # result = subprocess.run(curl_command, capture_output=True, text=True, check=True)
 
+            files = {
+                'file': (whatsapp_image, open(whatsapp_image, 'rb')),
+            }
+            # out.write(frame)
+            response = requests.post(api_url, data=data, files=files)
+            response.raise_for_status()  # Raise an exception for HTTP errors
+            print("POST request successful")
+            time.sleep(1)
         except requests.exceptions.RequestException as e:
             print("Request failed:", e)
-    
-
         
     status_list.append(status)
 
     status_list=status_list[-2:]
     
-    if status == 0 :
-        out.release()
+    # if status == 0 :
+        # out.release()
         # cv2.destroyAllWindows()        
 
 
@@ -99,6 +97,8 @@ while True:
             cv2.destroyAllWindows
             sys.exit()
         break
+
+    counter = counter + 1
 
 print(status_list)
 print(times)
