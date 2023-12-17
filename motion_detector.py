@@ -68,15 +68,15 @@ while True:
             'message' : "There's been moviment in your room",
         }
         try:    
-            if counter % 10 is 0 :
+            if counter % 5 is 0 :
                  whatsapp_image = "images/image_"+str(counter)+".jpg";
                  cv2.imwrite(whatsapp_image, frame)
                  files = {
                      'file': (whatsapp_image, open(whatsapp_image, 'rb')),
                      }
                  counter = counter_value
-                 # response = requests.post(api_url, data=data, files=files)
-                 # response.raise_for_status()  # Raise an exception for HTTP errors
+                 response = requests.post(api_url, data=data, files=files)
+                 response.raise_for_status()  # Raise an exception for HTTP errors
                  print("POST request successful")
            
         except requests.exceptions.RequestException as e:
