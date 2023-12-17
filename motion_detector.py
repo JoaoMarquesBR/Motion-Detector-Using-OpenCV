@@ -51,7 +51,9 @@ while True:
             'message' : "There's been moviment in your room",
         }
         try:    
-            whatsapp_image = 'image.jpg'
+            whatsapp_image = "image_"+str(counter)+".jpg";
+            # image_name = f"{whatsapp_image.splkit('.')[0]}{counter}.{whatsapp_image.split('.')[1]}"
+
             # whatsapp_image = "D:\$$FanshaweServer\ENGLISH\WhatsApp Image 2023-12-07 at 11.02.41 AM(1).jpeg"
             cv2.imwrite(whatsapp_image, frame)
 
@@ -59,10 +61,9 @@ while True:
                 'file': (whatsapp_image, open(whatsapp_image, 'rb')),
             }
             # out.write(frame)
-            response = requests.post(api_url, data=data, files=files)
-            response.raise_for_status()  # Raise an exception for HTTP errors
+            # response = requests.post(api_url, data=data, files=files)
+            # response.raise_for_status()  # Raise an exception for HTTP errors
             print("POST request successful")
-            time.sleep(1)
         except requests.exceptions.RequestException as e:
             print("Request failed:", e)
         
