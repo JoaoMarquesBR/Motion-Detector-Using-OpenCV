@@ -36,6 +36,7 @@ except Exception as e:
 
 counter_value = 900
 counter =0 ; 
+counter_loop =0;
 while True:
     check, frame = video.read()
     status = 0
@@ -47,8 +48,7 @@ while True:
         first_frame=gray
         counter = 0;
         continue
-    else:
-        print("Not updating image because counter is ", counter)
+
     delta_frame=cv2.absdiff(first_frame,gray)
     thresh_frame=cv2.threshold(delta_frame, 30, 255, cv2.THRESH_BINARY)[1]
     thresh_frame=cv2.dilate(thresh_frame, None, iterations=2)
@@ -68,15 +68,16 @@ while True:
             'message' : "There's been moviment in your room",
         }
         try:    
-            if counter % 5 is 0 :
+            if counter % 2 is 0 :
                  whatsapp_image = "images/image_"+str(counter)+".jpg";
                  cv2.imwrite(whatsapp_image, frame)
                  files = {
                      'file': (whatsapp_image, open(whatsapp_image, 'rb')),
                      }
+                 print("resetting?")
                  counter = counter_value
-                 response = requests.post(api_url, data=data, files=files)
-                 response.raise_for_status()  # Raise an exception for HTTP errors
+                #  response = requests.post(api_url, data=data, files=files)
+                #  response.raise_for_status()  # Raise an exception for HTTP errors
                  print("POST request successful")
            
         except requests.exceptions.RequestException as e:
@@ -115,6 +116,31 @@ while True:
         break
 
     counter = counter + 1
+    counter_loop= counter_loop+ 1
+
+    print(counter_loop)
+    
+    if counter_loop == 15000:
+        files = os.listdir(folder_path)
+        for file_name in files:
+            file_name = "images/" + file_name
+            data = {
+                'id' : phone_number,
+                'message':"Moviment in your room!"
+            }
+            files = {
+                'file':(file_name,open(file_name,'rb'))
+            }
+            try:
+                response = requests.post(api_url, data=data, files=files)
+                response.raise_for_status()  # Raise an exception for HTTP errors
+                print("sent image "+ file_name)
+            except requests.exceptions.RequestException as e:
+                print("Request failed:", e)
+        counter_loop = 0
+        
+       
+
 
 print(status_list)
 print(times)
